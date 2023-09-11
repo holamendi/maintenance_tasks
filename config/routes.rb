@@ -7,6 +7,7 @@ MaintenanceTasks::Engine.routes.draw do
         put "pause"
         put "cancel"
         put "resume"
+        get "logs"
       end
     end
   end

@@ -34,12 +34,16 @@ module MaintenanceTasks
     COMPLETED_STATUSES = [:succeeded, :errored, :cancelled]
     STUCK_TASK_TIMEOUT = 5.minutes
 
+    has_one :log
+
     enum status: STATUSES.to_h { |status| [status, status.to_s] }
 
     validate :task_name_belongs_to_a_valid_task, on: :create
     validate :csv_attachment_presence, on: :create
     validate :csv_content_type, on: :create
     validate :validate_task_arguments, on: :create
+
+    attr_accessor :log_buffer
 
     attr_readonly :task_name
 
@@ -97,6 +101,7 @@ module MaintenanceTasks
     # changes to the object.
     def persist_transition
       save!
+      persist_log_buffer!
       callback = CALLBACKS_TRANSITION[status]
       run_task_callbacks(callback) if callback
     rescue ActiveRecord::StaleObjectError
@@ -108,6 +113,15 @@ module MaintenanceTasks
         job_shutdown
       end
       retry
+    end
+
+    def persist_log_buffer!
+      return unless log_buffer&.any?
+
+      run_log = log || build_log
+      run_log.content = run_log.content.concat(log_buffer)
+      run_log.save!
+      self.log_buffer = []
     end
 
     # Increments +tick_count+ by +number_of_ticks+ and +time_running+ by
@@ -437,6 +451,10 @@ module MaintenanceTasks
       rescue ActiveModel::UnknownAttributeError
         task
       end
+    end
+
+    def append_log(message)
+      log_buffer << message
     end
 
     private

@@ -109,7 +109,10 @@ module MaintenanceTasks
 
     def before_perform
       @run = arguments.first
+      @run.log_buffer = []
       @task = @run.task
+      @task.run = @run
+
       if @task.has_csv_content?
         @task.csv_content = @run.csv_file.download
       end
