@@ -11,6 +11,8 @@ module MaintenanceTasks
 
     class NotFoundError < NameError; end
 
+    attr_accessor :run
+
     # The throttle conditions for a given Task. This is provided as an array of
     # hashes, with each hash specifying two keys: throttle_condition and
     # backoff. Note that Tasks inherit conditions from their superclasses.
@@ -252,6 +254,12 @@ module MaintenanceTasks
     # @return [Integer, nil]
     def count
       self.class.collection_builder_strategy.count(self)
+    end
+
+    def log(message)
+      raise "Task#log must be called within a run context" unless run
+
+      run.append_log(message)
     end
   end
 end

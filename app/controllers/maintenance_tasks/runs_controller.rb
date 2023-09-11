@@ -53,6 +53,13 @@ module MaintenanceTasks
       redirect_to(task_path(@run.task_name), alert: error.message)
     end
 
+    # Displays the logs for a given Run.
+    def logs
+      logs = @run.log&.content || ["No logs available"]
+
+      render plain: logs.join("\n")
+    end
+
     private
 
     def set_run

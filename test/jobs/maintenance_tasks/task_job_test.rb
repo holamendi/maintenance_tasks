@@ -596,6 +596,14 @@ module MaintenanceTasks
       TaskJob.perform_now(run)
     end
 
+    test ".perform_now persists run logs" do
+      run = Run.create!(task_name: "Maintenance::PersistRunLogsTask")
+
+      TaskJob.perform_now(run)
+
+      assert_equal ["number: 1", "number: 2", "number: 3"], run.log.content
+    end
+
     test "Active Record Relation tasks have their count calculated implicitly" do
       run = Run.create!(task_name: "Maintenance::UpdatePostsTask")
 

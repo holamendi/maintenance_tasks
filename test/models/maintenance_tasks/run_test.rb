@@ -125,6 +125,17 @@ module MaintenanceTasks
       assert_predicate run.reload, :succeeded?
     end
 
+    test "#persist_transition pesists logs when the log buffer is not empty and empties the buffer" do
+      run = Run.create!(task_name: "Maintenance::UpdatePostsTask", status: "running")
+      log = ["log 1", "log 2"]
+
+      run.log_buffer = log
+      run.persist_transition
+
+      assert_equal log, run.log.content
+      assert_equal [], run.log_buffer
+    end
+
     test "#persist_progress persists increments to tick count and time_running" do
       run = Run.create!(
         task_name: "Maintenance::UpdatePostsTask",
